@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Document</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      ul,
+      li {
+        list-style: none;
+      }
+      img {
+        display: block;
+      }
+      a {
+        text-decoration: none;
+      }
+
+      .banner {
+        width: 600px;
+        height: 300px;
+        margin: 50px auto;
+        overflow: hidden;
+        position: relative;
+      }
+      .banner .banner-list {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 4200px;
+        height: 300px;
+      }
+      .banner .banner-list li {
+        float: left;
+        width: 600px;
+        height: 300px;
+      }
+      .banner .banner-list li img {
+        width: 100%;
+        height: 100%;
+      }
+
+      .banner span {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 30px;
+        height: 30px;
+        font-size: 20px;
+        text-align: center;
+        line-height: 30px;
+        background-color: grey;
+        opacity: 0;
+        transition: opacity 2s;
+      }
+
+      .banner span.left {
+        left: 0;
+      }
+
+      .banner span.right {
+        right: 0;
+      }
+
+      .banner .icon-list {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 10px;
+      }
+
+      .banner .icon-list li {
+        width: 20px;
+        height: 20px;
+        float: left;
+        border-radius: 50%;
+        background-color: grey;
+        margin-right: 5px;
+      }
+
+      .banner .icon-list .current {
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="banner">
+      <ul class="banner-list">
+        <!-- 无缝操作的结构需要在最后加入第一张，在最前加入最后一张 -->
+        <li>
+          <img src="./images/1.jpg" alt="" />
+        </li>
+        <li>
+          <img src="./images/2.jpg" alt="" />
+        </li>
+        <li>
+          <img src="./images/3.jpg" alt="" />
+        </li>
+        <li>
+          <img src="./images/4.jpg" alt="" />
+        </li>
+        <li>
+          <img src="./images/5.jpg" alt="" />
+        </li>
+      </ul>
+
+      <ol class="icon-list"></ol>
+
+      <span class="left"> < </span>
+      <span class="right"> > </span>
+    </div>
+    <script>
+      const box = document.querySelector(".banner")
+      const bannerList = document.querySelector(".banner .banner-list")
+      const left = document.querySelector(".banner .left")
+      const right = document.querySelector(".banner .right")
+      const iconList = document.querySelector(".banner .icon-list")
+      const imgWidth = bannerList.children[0].offsetWidth
+
+      // 移入显示
+      box.onmouseenter = function () {
+        left.style.opacity = 1
+        right.style.opacity = 1
+        clearInterval(timer)
+        timer = null
+      }
+      // 移出隐藏
+      box.onmouseleave = function () {
+        left.style.opacity = 0
+        right.style.opacity = 0
+        timer = setInterval(function () {
+          right.click()
+        }, 2000)
+      }
+
+      // 动态生成下方小圆点
+      for (let i = 0; i < bannerList.children.length; i++) {
+        const li = document.createElement("li")
+        // 通过自定义属性记录当前圆点的索引号
+        li.setAttribute("index", i)
+        iconList.appendChild(li)
+        // 点击小圆点 使用排他思想 在生成li的同时直接绑定点击事件
+        li.addEventListener("click", function () {
+          for (let i = 0; i < iconList.children.length; i++) {
+            iconList.children[i].className = ""
+          }
+          this.className = "current"
+
+          // 点击圆点 移动图片 注意移动的是ul 不是 li
+          // ul移动的距离是小圆点的索引号*图片的宽度 注意是负值
+          const index = this.getAttribute("index")
+          // 点击了某个小li的同时 赋值给索引号num和索引号circle
+          num = index
+          circle = index
+
+          animate(bannerList, -(imgWidth * index))
+        })
+      }
+      // 将ol下的第一个li元素添加current类
+      iconList.children[0].className = "current"
+
+      // 克隆第一张图片放到ul的最后面
+      const firstImg = bannerList.children[0].cloneNode(true)
+      const lastImg = bannerList.children[
+        bannerList.children.length - 1
+      ].cloneNode(true)
+
+      bannerList.appendChild(firstImg)
+      bannerList.insertBefore(lastImg, bannerList.children[0])
+
+      // 点击右侧箭头 图片向左移动一张
+      let num = 0
+      // circle控制小圆点的播放
+      let circle = 0
+
+      right.addEventListener("click", function () {
+        if (num === bannerList.children.length - 1) {
+          bannerList.style.left = 0
+          num = 0
+        }
+        num++
+        animate(bannerList, -num * imgWidth)
+        circle++
+        // 判断是否走到最后一张
+        if (circle === iconList.children.length) {
+          circle = 0
+        }
+        circleChange()
+      })
+      // 点击左侧箭头 图片向右移动一张
+      left.addEventListener("click", function () {
+        if (num === 0) {
+          num = bannerList.children.length - 1
+          bannerList.style.left = -num * imgWidth + "px"
+        }
+        num--
+        animate(bannerList, -num * imgWidth)
+        circle--
+        // 判断是否走到最后一张
+        circle = circle < 0 ? iconList.children.length - 1 : circle
+        circleChange()
+      })
+
+      // 动画函数
+      function animate(obj, target, callback) {
+        // 先清除以前的定时器，只保留当前的一个定时器执行
+        clearInterval(obj.timer)
+        obj.timer = setInterval(function () {
+          var step = (target - obj.offsetLeft) / 10
+          step = step > 0 ? Math.ceil(step) : Math.floor(step)
+          if (obj.offsetLeft == target) {
+            clearInterval(obj.timer)
+
+            callback && callback()
+          }
+          obj.style.left = obj.offsetLeft + step + "px"
+        }, 15)
+      }
+
+      // 排他思想设置小圆点
+      function circleChange() {
+        for (let i = 0; i < iconList.children.length; i++) {
+          iconList.children[i].className = ""
+        }
+        iconList.children[circle].className = "current"
+      }
+
+      // 自动播放
+      let timer = setInterval(function () {
+        // 手动调用点击事件
+        right.click()
+      }, 2000)
+    </script>
+  </body>
+</html>

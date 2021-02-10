@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Document</title>
+    <style>
+      div {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        background-color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <button class="btn">移到500</button>
+    <button class="btn">移到800</button>
+    <div id="box"></div>
+    <script>
+      /**
+       * 让盒子每次移动的距离慢慢变小 速度就会慢慢落下来
+       * (目标值-现在的位置)/10 作为每次移动的距离步长
+       */
+
+      const btn = document.querySelectorAll(".btn")
+      const box = document.querySelector("#box")
+
+      function animate(obj, target, callback) {
+        // 假设点击按钮 触发定时器事件 如果不断点击按钮 元素会越来越快 因为开启了太多定时器
+        // 解决方案：让元素只有一个定时器执行 先清除以前的定时器 只保留当前的一个定时器
+        clearInterval(obj.timer)
+        // 将timer设置为各自对象的属性 给不同元素指定不同定时器
+        obj.timer = setInterval(function () {
+          // 计算步长 注意步长值为整数 并且分正负数情况
+          let step = (target - obj.offsetLeft) / 10
+          step = step > 0 ? Math.ceil(step) : Math.floor(step)
+          if (obj.offsetLeft === target) {
+            clearInterval(obj.timer)
+            // 动画结束后执行
+            if (callback) {
+              callback()
+            }
+          }
+          obj.style.left = obj.offsetLeft + step + "px"
+        }, 15)
+      }
+
+      btn[0].addEventListener("click", function () {
+        animate(box, 500, function () {
+          alert("hahah")
+        })
+      })
+      btn[1].addEventListener("click", function () {
+        animate(box, 800)
+      })
+    </script>
+  </body>
+</html>
