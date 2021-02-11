@@ -124,21 +124,29 @@
       const iconList = document.querySelector(".banner .icon-list")
       const imgWidth = bannerList.children[0].offsetWidth
 
+      // 控制箭头播放
+      let num = 0
+      // 控制圆点播放
+      let circle = 0
+      // flag节流阀
+      let flag = true
+
       // 移入显示
-      box.onmouseenter = function () {
+      box.addEventListener("mouseenter", function () {
         left.style.opacity = 1
         right.style.opacity = 1
         clearInterval(timer)
         timer = null
-      }
+      })
+
       // 移出隐藏
-      box.onmouseleave = function () {
+      box.addEventListener("mouseleave", function () {
         left.style.opacity = 0
         right.style.opacity = 0
         timer = setInterval(function () {
           right.click()
         }, 2000)
-      }
+      })
 
       // 动态生成下方小圆点
       for (let i = 0; i < bannerList.children.length; i++) {
@@ -156,10 +164,10 @@
           // 点击圆点 移动图片 注意移动的是ul 不是 li
           // ul移动的距离是小圆点的索引号*图片的宽度 注意是负值
           const index = this.getAttribute("index")
+
           // 点击了某个小li的同时 赋值给索引号num和索引号circle
           num = index
           circle = index
-
           animate(bannerList, -(imgWidth * index))
         })
       }
@@ -168,44 +176,47 @@
 
       // 克隆第一张图片放到ul的最后面
       const firstImg = bannerList.children[0].cloneNode(true)
-      const lastImg = bannerList.children[
-        bannerList.children.length - 1
-      ].cloneNode(true)
-
       bannerList.appendChild(firstImg)
-      bannerList.insertBefore(lastImg, bannerList.children[0])
-
-      // 点击右侧箭头 图片向左移动一张
-      let num = 0
-      // circle控制小圆点的播放
-      let circle = 0
 
       right.addEventListener("click", function () {
-        if (num === bannerList.children.length - 1) {
-          bannerList.style.left = 0
-          num = 0
+        if (flag) {
+          // 先关闭节流阀
+          flag = false
+          if (num == bannerList.children.length - 1) {
+            bannerList.style.left = 0
+            num = 0
+          }
+          num++
+          // 动画执行完毕 开启节流阀
+          animate(bannerList, -num * imgWidth, function () {
+            flag = true
+          })
+          circle++
+          // 判断是否走到最后一张
+          if (circle === iconList.children.length) {
+            circle = 0
+          }
+          circleChange()
         }
-        num++
-        animate(bannerList, -num * imgWidth)
-        circle++
-        // 判断是否走到最后一张
-        if (circle === iconList.children.length) {
-          circle = 0
-        }
-        circleChange()
       })
+
       // 点击左侧箭头 图片向右移动一张
       left.addEventListener("click", function () {
-        if (num === 0) {
-          num = bannerList.children.length - 1
-          bannerList.style.left = -num * imgWidth + "px"
+        if (flag) {
+          flag = false
+          if (num == 0) {
+            num = bannerList.children.length - 1
+            bannerList.style.left = -num * imgWidth + "px"
+          }
+          num--
+          animate(bannerList, -num * imgWidth, function () {
+            flag = true
+          })
+          circle--
+          // 判断是否走到最后一张
+          circle = circle < 0 ? iconList.children.length - 1 : circle
+          circleChange()
         }
-        num--
-        animate(bannerList, -num * imgWidth)
-        circle--
-        // 判断是否走到最后一张
-        circle = circle < 0 ? iconList.children.length - 1 : circle
-        circleChange()
       })
 
       // 动画函数
